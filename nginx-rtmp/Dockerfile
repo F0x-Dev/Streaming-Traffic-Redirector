@@ -1,0 +1,5 @@
+FROM nginx:stable-alpine
+
+RUN apk add --no-cache build-base git pcre-dev zlib-dev openssl-dev wget ca-certificates  && git clone https://github.com/arut/nginx-rtmp-module.git /tmp/nginx-rtmp-module  && nginx_version=$(nginx -v 2>&1 | sed -n 's/nginx\/\([0-9.]*\).*/\1/p')  && apk add --no-cache libxslt-dev gd-dev geoip-dev perl-dev  && mkdir -p /usr/src  && cd /usr/src  && wget http://nginx.org/download/nginx-${nginx_version}.tar.gz  && tar zxvf nginx-${nginx_version}.tar.gz  && cd nginx-${nginx_version}  && ./configure --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx       --modules-path=/usr/lib/nginx/modules       --conf-path=/etc/nginx/nginx.conf       --error-log-path=/var/log/nginx/error.log       --http-log-path=/var/log/nginx/access.log       --with-http_ssl_module       --with-http_v2_module       --with-http_slice_module       --with-threads       --add-module=/tmp/nginx-rtmp-module  && make && make install  && apk del build-base git pcre-dev zlib-dev openssl-dev libxslt-dev gd-dev perl-dev  && rm -rf /var/cache/apk/* /tmp/* /usr/src/*
+
+COPY conf /etc/nginx/conf.d

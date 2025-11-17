@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Streaming Traffic Redirecter</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Streaming Traffic Redirecter</h1>
+    <div id="status"></div>
+    <table>
+      <thead><tr><th>Stream Key</th><th>Status</th></tr></thead>
+      <tbody id="streams">
+        {% for s in streams %}
+        <tr><td>{{ s['key'] }}</td><td>{{ s['status'] }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Add New Stream (Admin)</h2>
+    <form id="addForm">
+      <input name="key" id="key" placeholder="stream-key" required>
+      <input name="token" id="token" placeholder="admin token" required>
+      <button type="submit">Add</button>
+    </form>
+    <p>Get an admin token by POSTing username & password to /login (returns access_token).</p>
+  </div>
+
+<script>
+const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
+ws.onmessage = (ev) => {
+  try {
+    const msg = JSON.parse(ev.data);
+    const status = document.getElementById('status');
+    status.textContent = 'Event: ' + msg.event + ' for ' + msg.stream;
+    setTimeout(()=> location.reload(), 800);
+  } catch(e){ console.error(e) }
+};
+
+document.getElementById('addForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const key = document.getElementById('key').value;
+  const token = document.getElementById('token').value;
+  const fd = new FormData();
+  fd.append('key', key);
+  fd.append('token', token);
+  const res = await fetch('/add_stream', { method: 'POST', body: fd });
+  if (res.redirected) window.location = res.url;
+  else alert('Failed to add');
+});
+</script>
+</body>
+</html>
